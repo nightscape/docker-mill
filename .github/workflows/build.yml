@@ -91,20 +91,20 @@ jobs:
       #        install: true
     - name: Available platforms
       run: echo ${{ steps.buildx.outputs.platforms }}
-    - name: Get latest SBT version
-      id: get_sbt_version
+    - name: Get latest MILL version
+      id: get_mill_version
       run: |
-        SBT_VERSION=$(
-          curl --silent -L https://github.com/sbt/sbt/releases |
+        MILL_VERSION=$(
+          curl --silent -L https://github.com/lihaoyi/mill/releases |
           grep -i -w -o '>[0-9]*\.[0-9]*\.[0-9]*</a>' |
           grep -i -w -o '[0-9]*\.[0-9]*\.[0-9]*' |
           sort --version-sort | tail -n 1)
-        [[ -z "$SBT_VERSION" ]] && { echo "Failed to get latest sbt version" ; exit 1; }
-        echo ::set-output name=VERSION::$SBT_VERSION
+        [[ -z "$MILL_VERSION" ]] && { echo "Failed to get latest mill version" ; exit 1; }
+        echo ::set-output name=VERSION::$MILL_VERSION
     - name: Create docker tag
       id: create_docker_tag
       run: |
-        TAG=sbtscala/scala-sbt:${{ matrix.javaTag }}_${{ steps.get_sbt_version.outputs.VERSION }}_${{ matrix.scalaVersion }}
+        TAG=nightscape/scala-mill:${{ matrix.javaTag }}_${{ steps.get_mill_version.outputs.VERSION }}_${{ matrix.scalaVersion }}
         echo ::set-output name=TAG::$TAG
     - name: Build docker image
       run: |
@@ -112,22 +112,20 @@ jobs:
             --no-cache \
             -t "${{ steps.create_docker_tag.outputs.TAG }}" \
             --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} \
-            --build-arg SBT_VERSION=${{ steps.get_sbt_version.outputs.VERSION }} \
+            --build-arg MILL_VERSION=${{ steps.get_mill_version.outputs.VERSION }} \
             --build-arg SCALA_VERSION=${{ matrix.scalaVersion }}
     - name: Test docker image as root (default)
       if: ${{ !startsWith(matrix.scalaVersion, '2.12') }}
       # scala --version does not work on < 2.13
       run: |
         docker run "${{ steps.create_docker_tag.outputs.TAG }}" \
-          scala --version &&
-          sbt about
-    - name: Test docker image scala as sbtuser
+          bash -c "scala --version && mill -v"
+    - name: Test docker image scala as milluser
       if: ${{ !startsWith(matrix.scalaVersion, '2.12') }}
       # scala --version does not work on < 2.13
       run: |
-        docker run -u sbtuser -w /home/sbtuser "${{ steps.create_docker_tag.outputs.TAG }}" \
-          scala --version &&
-          sbt about
+        docker run -u milluser -w /home/milluser "${{ steps.create_docker_tag.outputs.TAG }}" \
+          bash -c "scala --version && mill -v"
     - name: Log in to DockerHub
       if: github.event_name != 'pull_request'
       uses: docker/login-action@v2
@@ -141,7 +139,7 @@ jobs:
             --no-cache \
             -t "${{ steps.create_docker_tag.outputs.TAG }}" \
             --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} \
-            --build-arg SBT_VERSION=${{ steps.get_sbt_version.outputs.VERSION }} \
+            --build-arg MILL_VERSION=${{ steps.get_mill_version.outputs.VERSION }} \
             --build-arg SCALA_VERSION=${{ matrix.scalaVersion }} \
             --platform ${{ matrix.platforms }} \
             --push
