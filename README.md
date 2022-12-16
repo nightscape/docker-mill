@@ -1,6 +1,6 @@
 # Scala and mill Dockerfile
 
-This repository provides [Scala](http://www.scala-lang.org) and [mill](http://www.scala-mill.org) Docker files and images.
+This repository provides [Scala](http://www.scala-lang.org) and [mill](https://com-lihaoyi.github.io/mill) Docker files and images.
 
 As we think referencing unstable versions is a bad idea we don't publish a `latest` tag. Our tags consists of three parts: `<JDK version>_<mill version>_<Scala version>`.
 
@@ -14,7 +14,7 @@ Available JDK base images:
 
 ## Where to get images
 
-The images are published at [Docker Hub](https://hub.docker.com/u/millscala)
+The images are published at [Docker Hub](https://hub.docker.com/r/nightscape/scala-mill)
 
 For a list of all available tags see https://hub.docker.com/r/nightscape/scala-mill/tags
 
